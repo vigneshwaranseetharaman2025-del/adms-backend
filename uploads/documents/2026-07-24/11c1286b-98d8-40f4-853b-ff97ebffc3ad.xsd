@@ -1,0 +1,1338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+@Version     : 1.11
+@Created By  : Hari Srinivasan, Aithent
+@Created On  : Apr 20, 2012
+#########################################
+@Version		 : 1.1
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Dec 15, 2011
+@Changes     : 1.Included "AdditionalField1" to "AdditionalField10" under Transaction.
+					2.Included OnUs flag under Transaction for Maker, Payee, Endorser, Merchant, Drawee, Depositor, Suspect and 									  CardHolder.
+					3."IncludeInRisk" - default value set as 1.
+#########################################					
+@Version		 : 1.2
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Dec 30, 2011
+@Changes     : 1.Included element "MiscIdentifier" to support any number of Person/Company identifiers.
+					2.Included element "Fax" under "AddressInformation" and removed it under "CustomerInformation".
+					3.Replaced elements "HomePhone" and "WorkPhone" with "Pager" and "Mobile" since Phone is already captured as part of 						  AddressInformation based on AddressType as Work/Home
+					4.Included element "IsPrimary" under "AddressInformation"; Values - 1 (primary), 0 (NOT primary, default).
+					5.Restriction on the following drop-list elements has been removed and values specified in the comment section - 								  CaseSource,CaseCategory,CaseStatus,CasePriority,CaseOutcome,CardType,AccountStatus,PolicyViolations,ItemType,
+					  DebitCardTransactionType,CreditCardTransactionType,BSATransactionType,MimeType,NoteType,RelationshipToCase,
+					  RelationshipToOrganization,AccountType,FraudMethod,IncidentOrigin,Disposition.
+					6.Included elements "ItemSequenceNumber" and "PostingDate" under the transactions - CheckTransaction, 											  DebitCardTransaction and GeneralFraudTransaction.
+					7.Included element "RobbersArrested" as part of "Robbery" transaction.
+					8.Included element "RecoveryGroup" as part of "CaseRecoveriesAndPrevents".
+#########################################					
+@Version		 : 1.3
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Feb 10, 2012
+@Changes     : 1.Included Charge-off information involving GL codes as part of transaction, subject and recovery/prevent.
+#########################################					
+@Version		 : 1.4
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Feb 15, 2012
+@Changes     : 1.Included elements - EmployeeNumber, EmployeeName and EmployeeLocation as part of Transaction information.
+					2.Removed Charge-off information from Subject Restitution details.
+					3.Included AccountNumber as part of debit card transaction.
+#########################################					
+@Version		 : 1.5
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Feb 24, 2012
+@Changes     : 1.Included transaction types - ACH Fraud, Wire Fraud, Internal Fraud, Operational Fraud, Government Reclamation.
+					2.Changed OnUs flag in all transaction from boolean to custom type "OnUsFlag". The element shall hold values 0 or 1.
+#########################################					
+@Version		 : 1.6
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Feb 27, 2012
+@Changes     : 1.Included elements TypeOfRecovery, Source and Investigator as part of CaseRecoveriesAndPrevents.
+					2.Removed OnUs flag from MerchantName in Debit Card transaction.
+					3.Included CardType as part of Debit Card transaction.
+					4.Renamed OperationalFraud as OperationalLoss.
+					5.Added BankName as part of Check transaction.					
+#########################################					
+@Version		 : 1.7
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Mar 12, 2012
+@Changes     : 1.Included attribute "NoOfCases" to root element "Case".
+					2.Default value of OnUs flag set to 0(zero).
+					3.Default value set as 0(zero) for the following Robbery transaction elements - NoOfRobbers,RobbersArrested
+						StaffInBank,Injuries,TellersRobbed,RobberyDocumentFiled,WeaponDisplayed,ArrestMade,VaultRobbed,DyePacksGiven.
+#########################################					
+@Version		 : 1.8
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Mar 13, 2012
+@Changes     : 1.Removed elements "ItemSequenceNumber" and "PostingDate" from all transactions except "CheckTransaction".
+#########################################					
+@Version		 : 1.9
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Mar 22, 2012
+@Changes     : 1.Removed sub-elements "FirstName" and "LastName" from element "EnteredBy". This will be of type integer and 										correspond to AFM User Id.
+#########################################					
+@Version		 : 1.9
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Mar 27, 2012
+@Changes     : 1.Removed element "BankName" from "CheckTransaction".
+#########################################					
+@Version		 : 1.9
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Mar 28, 2012
+@Changes     : 1.Removed sub-elements "FirstName" and "LastName" from element "CaseRecoveriesAndPrevents-Investigator". This will 								be of type integer and correspond to AFM User Id.
+#########################################					
+@Version		 : 1.9
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Apr 03, 2012
+@Changes     : 1.Set minOccurs=0 for OnUs flag. No impact on the xml structure.
+#########################################					
+@Version		 : 1.10
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Apr 12, 2012
+@Changes     : 1.Defined a new type "AccDetails" which includes elements "AccountNumber" and "AccountDescription". The account 								number elements corresponding to Maker, Payee, Customer, Card holder, Suspect, Merchant, Drawee, Depositor, Endorser, 					Originator, Receiver have been renamed and are assigned the type "AccDetails". This information is used as request 							parameter in the CIF call.
+#########################################					
+@Version		 : 1.11
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Apr 20, 2012
+@Changes     : 1.Removed elements "ATMNumber" and "Teller" from Check transaction. ATM number will be shown in the Affiliate # 								field and Teller information is captured as part of Employee details (emp #, name and location). 			 		
+-->
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="Case">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="CaseSummary"/>
+            </xs:sequence>
+            <xs:attribute name="NoOfCases" type="xs:integer" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CaseSummary">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="CaseInformation"/>
+                <xs:element minOccurs="0" ref="CaseSubject"/>
+                <xs:element minOccurs="0" ref="TransactionInformation"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="CaseRecoveriesAndPrevents"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0"
+                    name="CaseAttachments" type="Attachments"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="CaseNotes"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CaseInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="CaseTitle"/>
+                <xs:element maxOccurs="unbounded" ref="CaseType"/>
+                <xs:element minOccurs="0" ref="CaseCategory"/>
+                <xs:element minOccurs="0" name="CaseSource" type="xs:string"/>
+                <!--
+                    Values: Branches,Card Group,Check Fraud Detect,ChexAlert,CIP,Client,Customer,DepositChek,                  												 Early Warning,Employee,Financial Institution,Hold(s) Placed,Internal Process,Kite Report,            											 Legal,Member,NA,Non-Client,Non-Customer,RDI,Risk Services,Security
+                -->
+                <xs:element name="DateOpened" type="xs:date"/>
+                <xs:element ref="CaseStatus"/>
+                <xs:element minOccurs="0" name="DateClosed" type="xs:date"/>
+                <xs:element minOccurs="0" ref="CasePriority"/>
+                <xs:element minOccurs="0" name="Location" type="xs:integer"/>
+                <xs:element minOccurs="0" name="Sensitive" type="xs:boolean" default="0"/>
+                <xs:element minOccurs="0" ref="AlternateCaseNumber"/>
+                <xs:element minOccurs="0" name="CaseSummaryDescription" type="xs:string"/>
+                <xs:element minOccurs="0" ref="CaseOutcome"/>
+                <xs:element minOccurs="0" ref="EnteredBy"/>
+                <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CaseTitle">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="CaseType" type="xs:string"/>
+    <!--
+        Values: Bank Secrecy Act / Structuring / Money Laundering,Bribery / Gratuity,Check Fraud,Check Kiting,
+        			 Commercial Loan Fraud,Computer Intrusion,Consumer Loan Fraud,Counterfeit Check,Counterfeit Credit / Debit 										 Card,Counterfeit Instrument (other),Credit Card Fraud,Debit Card Fraud,Defalcation / Embezzlement,False 										 Statement,Forgery,Fraudulent/Inflated Claims,Identity Theft,Misuse of Position or Self Dealing,Mortgage Loan 									 Fraud,Mysterious Disappearance,NA,Other (type of activity),Terrorist Financing,Wire Transfer Fraud
+    -->
+    <xs:element name="CaseCategory" type="xs:string"/>
+    <!--
+			Values: REG E DISPUTE,Lost/Stolen Debit Card,Counterfeit Debit Card,Debit Card Compromise
+	 -->
+    <xs:element name="CaseStatus" type="xs:string"/>
+    <!--
+			Values: Open,Closed,Closed - Under Restitution
+    -->
+    <xs:element name="CasePriority" type="xs:string"/>
+    <!--
+         Values: High,Medium,Low
+    -->
+    <xs:element name="AlternateCaseNumber">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="CaseOutcome" type="xs:string"/>
+    <!--
+       Values: Closed Civil Action Filed,Closed/Account Closed,Closed/Activity Discontinued,Closed/Claim 															Denied,Closed/Collection,Closed/Collection In Progress,Closed/Employee Terminated,Closed/Filed With 												Police,Closed/Legal Action Pending,Closed/Loss Prevented,Closed/Loss Recovered,Closed/SAR Filed,Closed/SAR Filed With 					Police,Closed/SAR/Employee Terminated,No Evidence of misconduct/fraud
+    -->
+    <xs:element name="CaseSubject">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="PersonInformation"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="CompanyInformation"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="PersonInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="PersonDemographics"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="PersonAccountInformation"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="RestitutionInformation"/>
+            </xs:sequence>
+            <xs:attribute name="CustomerId" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="PersonDemographics">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="FirstName"/>
+                <xs:element minOccurs="0" ref="MiddleName"/>
+                <xs:element ref="LastName"/>
+                <xs:element minOccurs="0" ref="SSNOrTIN"/>
+                <xs:element name="DOB" type="xs:date"/>
+                <xs:element minOccurs="0" name="Sex">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:pattern value="M|F|Null"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <xs:element minOccurs="0" name="Title" type="xs:string"/>
+                <xs:element ref="RelationshipToCase"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="RelationshipToOrganization"/>
+                <xs:element minOccurs="0" ref="Aka"/>
+                <xs:element minOccurs="0" ref="Occupation"/>
+                <xs:element minOccurs="0" ref="Email"/>
+                <xs:element minOccurs="0" name="Pager" type="PhoneType"/>
+                <xs:element minOccurs="0" name="Mobile" type="PhoneType"/>
+                <xs:element minOccurs="0" name="Weight" type="xs:string"/>
+                <xs:element minOccurs="0" name="EyeColor" type="xs:string"/>
+                <xs:element minOccurs="0" name="CitizenshipCode" type="xs:string"/>
+                <xs:element minOccurs="0" name="Employer" type="xs:string"/>
+                <xs:element minOccurs="0" name="EmploymentNumber" type="xs:string"/>
+                <xs:element minOccurs="0" name="CustomerSince" type="xs:date"/>
+                <xs:element minOccurs="0" name="W8Cert" type="xs:string"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0"
+                    name="MiscIdentifier" type="IdentifierInformation"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="BSAInformation"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0"
+                    name="PersonAddressInformation" type="AddressInformation"/>
+                <xs:element minOccurs="0" ref="EnteredBy"/>
+                <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:simpleType name="PhoneType">
+        <xs:restriction base="xs:integer">
+            <xs:pattern value="[0-9]{10}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:element name="FirstName">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="LastName">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="MiddleName">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="SSNOrTIN">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:pattern value="[0-9]{9}"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="Aka">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="Alias"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="Alias">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="100"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="Occupation">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="100"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="BSAInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="DocumentType"/>
+                <xs:element minOccurs="0" ref="DocumentTypeDescription"/>
+                <xs:element ref="DocumentNumber"/>
+                <xs:element name="IssuedBy">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:maxLength value="100"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <xs:element name="IssuedDate" type="xs:date"/>
+                <xs:element name="ExpiryDate" type="xs:date"/>
+                <xs:element minOccurs="0" ref="EnteredBy"/>
+                <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="DocumentType">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:enumeration value="Driver?s License / State ID"/>
+                <xs:enumeration value="Passport"/>
+                <xs:enumeration value="Alien Registration"/>
+                <xs:enumeration value="Other"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="DocumentTypeDescription">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="DocumentNumber">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="Email">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:complexType name="AddressInformation">
+        <xs:sequence>
+            <xs:element ref="AddressType"/>
+            <xs:element default="0" name="IsPrimary">
+                <xs:simpleType>
+                    <xs:restriction base="xs:integer">
+                        <xs:pattern value="1|0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element minOccurs="0" ref="AddressLine1"/>
+            <xs:element minOccurs="0" ref="AddressLine2"/>
+            <xs:element minOccurs="0" ref="City"/>
+            <xs:element minOccurs="0" ref="State"/>
+            <xs:element minOccurs="0" ref="Zip"/>
+            <xs:element minOccurs="0" ref="Country"/>
+            <xs:element minOccurs="0" name="Phone" type="PhoneType"/>
+            <xs:element minOccurs="0" name="Fax" type="PhoneType"/>
+            <xs:element minOccurs="0" ref="EnteredBy"/>
+            <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="PersonAccountInformation" type="SubjectAccountInfo"/>
+    <xs:complexType name="IdentifierInformation">
+        <xs:sequence>
+            <xs:element name="IdName" type="xs:string"/>
+            <xs:element name="IdValue" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="CompanyInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="CompanyDemographics"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="CompanyAccountInformation"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="RestitutionInformation"/>
+            </xs:sequence>
+            <xs:attribute name="CustomerId" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CompanyDemographics">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="CompanyName"/>
+                <xs:element minOccurs="0" ref="EIN"/>
+                <xs:element ref="RelationshipToCase"/>
+                <xs:element minOccurs="0" ref="RelationshipToOrganization"/>
+                <xs:element minOccurs="0" ref="TypeOfBusiness"/>
+                <xs:element minOccurs="0" ref="Description"/>
+                <xs:element minOccurs="0" ref="Url"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0"
+                    name="MiscIdentifier" type="IdentifierInformation"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="BSAInformation"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0"
+                    name="CompanyAddressInformation" type="AddressInformation"/>
+                <xs:element minOccurs="0" ref="EnteredBy"/>
+                <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="RestitutionInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" name="RestitutionName">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:maxLength value="250"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <xs:element minOccurs="0" name="AgreementDate" type="xs:date"/>
+                <xs:element minOccurs="0" name="TotalAmount" type="Amount"/>
+                <xs:element minOccurs="0" name="Installment" type="Amount"/>
+                <xs:element minOccurs="0" name="Frequency" type="xs:integer"/>
+                <!--Values:
+    			    1=Daily;2=Every two weeks;3=Monthly;4=One time payment;5=Quarterly;6=Semiannual;7=Weekly;8=Yearly
+    			-->
+                <xs:element minOccurs="0" name="Status" type="xs:string"/>
+                <!--Values:
+    			    a=abate;o=open;c=closed;p=paid in full;s=suspended
+    			-->
+                <xs:element minOccurs="0" name="NoOfInstallments" type="xs:integer"/>
+                <xs:element minOccurs="0" name="PaymentInformation">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="PaymentDate" type="xs:date"/>
+                            <xs:element name="PaymentAmount" type="Amount"/>
+                            <xs:element minOccurs="0" name="PaymentType" type="xs:string"/>
+                            <!--values:
+        					    check/transfer/wire
+        					-->
+                            <xs:element minOccurs="0"
+                                name="CreditLocation" type="xs:integer"/>
+                            <!--location id-->
+                            <xs:element minOccurs="0" name="ReferenceNumber">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                    <xs:maxLength value="100"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CompanyName">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="60"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="EIN">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:pattern value="[0-9]{9}"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="Url">
+        <xs:simpleType>
+            <xs:restriction base="xs:anyURI">
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="TypeOfBusiness">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="100"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="CompanyAccountInformation" type="SubjectAccountInfo"/>
+    <xs:complexType name="SubjectAccountInfo">
+        <xs:sequence>
+            <xs:element minOccurs="0" ref="AccountNumber"/>
+            <xs:element minOccurs="0" name="CreditOrDebitCardInformation">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="CardType" type="xs:string"/>
+                        <!--	
+                     		Values: American Express,Discover,MasterCard,Visa
+                     -->
+                        <xs:element name="CardNumber">
+                            <xs:simpleType>
+                                <xs:restriction base="xs:string">
+                                    <xs:maxLength value="20"/>
+                                </xs:restriction>
+                            </xs:simpleType>
+                        </xs:element>
+                        <xs:element minOccurs="0" name="LineOfCredit" type="Amount"/>
+                        <xs:element minOccurs="0" name="AssociatedAccounts">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element maxOccurs="unbounded" ref="AccountNumber"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element minOccurs="0" ref="AccountType"/>
+            <xs:element minOccurs="0" name="AccountStatus" type="xs:string"/>
+            <!--
+                Values: Open,Closed,Inactive
+            -->
+            <xs:element minOccurs="0" name="OpenedOrIssueDate" type="xs:date"/>
+            <xs:element minOccurs="0" ref="BranchNumber"/>
+            <xs:element minOccurs="0" name="BranchRepresentative">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:maxLength value="150"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element minOccurs="0" name="ClosedOrExpiryDate" type="xs:date"/>
+            <xs:element minOccurs="0" name="RecommendedCloseDate" type="xs:date"/>
+            <xs:element minOccurs="0" name="Compromised" type="xs:boolean"/>
+            <xs:element minOccurs="0" name="ForeignAccount" type="xs:boolean"/>
+            <xs:element minOccurs="0" name="ExternalOrNotOnUs" type="OnUsFlag" default="0"/>
+            <xs:element minOccurs="0" ref="AccountOwnership"/>
+            <xs:element minOccurs="0" ref="EnteredBy"/>
+            <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="BranchNumber">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="AccountOwnership">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:enumeration value="PrimaryOwner"/>
+                <xs:enumeration value="SecondaryOwner"/>
+                <xs:enumeration value="obligor"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="TransactionInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="CheckTransaction"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="DebitCardTransaction"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="GeneralFraudTransaction"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="CreditCardTransaction"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="BSATransaction"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="Robbery"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="PropertyTheft"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="WorkplaceViolence"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="ACHFraud"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="WireFraud"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="InternalFraud"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="GovernmentReclamation"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="OperationalLoss"/>                                                
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="BasicTransactionInfo">
+        <xs:sequence>
+            <xs:element name="OccuredDateTime" type="xs:dateTime"/>
+            <xs:element name="OccuredLocation" type="xs:integer"/>
+            <xs:element maxOccurs="unbounded" minOccurs="0"
+                name="TransactionAttachments" type="Attachments"/>
+            <xs:element minOccurs="0" name="Comments">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:maxLength value="4000"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element minOccurs="0" name="PolicyViolations">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded"
+                            name="Violation" type="xs:string"/>
+                        <!--
+                            Values: Alter Item,Check Face inadequate or not reviewed,ChexSystems not reviewed or override,Duplicate 													check number,Endorsement inadequate or not reviewed,Endorser not on account,Hold(s) not placed 														or inadequate,Identification - None/Improper,Instruction override or not followed,Kite 																override,Lack of employee attention,Makers signature inadequate or not reviewed,No Supervisor 														Approval,No second endorsement,PPS/True Check Violation,Policy Violation,Total of Check exceeded 												Account Balance
+                        -->
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element minOccurs="0" name="AdditionalField1" type="xs:string"/>
+            <xs:element minOccurs="0" name="AdditionalField2" type="xs:string"/>
+            <xs:element minOccurs="0" name="AdditionalField3" type="xs:string"/>
+            <xs:element minOccurs="0" name="AdditionalField4" type="xs:string"/>
+            <xs:element minOccurs="0" name="AdditionalField5" type="xs:string"/>
+            <xs:element minOccurs="0" name="AdditionalField6" type="xs:string"/>
+            <xs:element minOccurs="0" name="AdditionalField7" type="xs:string"/>
+            <xs:element minOccurs="0" name="AdditionalField8" type="xs:string"/>
+            <xs:element minOccurs="0" name="AdditionalField9" type="xs:string"/>
+            <xs:element minOccurs="0" name="AdditionalField10" type="xs:string"/>
+            <xs:element minOccurs="0" name="TransactionChargeOff">
+        			<xs:complexType>
+            		<xs:sequence>
+                		<xs:element maxOccurs="unbounded" minOccurs="0" name="ChargeOffDetails" type="ChargeOffInformation"/>
+            		</xs:sequence>
+        			</xs:complexType>
+        		</xs:element>
+            <xs:element minOccurs="0" name="EmployeeNumber" type="xs:string"/>
+            <xs:element minOccurs="0" name="EmployeeName" type="xs:string"/>
+            <xs:element minOccurs="0" name="EmployeeLocation" type="xs:integer"/>
+            <!--Location Id-->
+            <xs:element minOccurs="0" ref="EnteredBy"/>
+            <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="CheckTransaction" type="CheckTransactionInfo"/>
+    <xs:complexType name="CheckTransactionInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element minOccurs="0" ref="IncidentOrigin"/>
+                    <xs:element minOccurs="0" name="LossLocation" type="xs:integer"/>
+                    <xs:element minOccurs="0" name="PresentationMethod" type="FraudMethod"/>
+                    <xs:element minOccurs="0" name="ItemDate" type="xs:date"/>
+                    <xs:element minOccurs="0" name="ItemType" type="xs:string"/>
+                    <!--
+                        Values: Bill Pay,Business,Business - ATM,Business - Checking,Business - Draft,Business - Savings,Cashier 												  Check,Gift Cheques,Moneyorder,Official Check,Personal,Personal - ATM,Personal - Checking,Personal - 											  Draft,Personal - Savings,Personal - Cheques
+                    -->
+                    <xs:element minOccurs="0" ref="ItemNumber"/>
+                    <xs:element minOccurs="0"
+                        name="RoutingNumber" type="xs:string"/>
+						  <xs:element minOccurs="0" name="DraweeBank" type="xs:string"/>
+                    <xs:element minOccurs="0" name="ItemAmount" type="Amount"/>
+                    <xs:element ref="IncludeInRisk"/>
+                    <xs:element minOccurs="0" name="LossAmount" type="Amount"/>
+                    <xs:element minOccurs="0" name="TerminalID" type="xs:string"/>
+                    <xs:element minOccurs="0" name="AffiliateNumber" type="xs:string"/>
+                    <xs:element minOccurs="0" ref="State"/>
+                    <xs:element minOccurs="0" name="ItemAccountNumber" type="xs:string"/>
+                    <xs:element minOccurs="0" name="MakerOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" name="MakerAccountDetails" type="AccDetails"/>
+                    <xs:element minOccurs="0" name="Maker" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="PayeeOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" name="PayeeAccountDetails" type="AccDetails"/>
+                    <xs:element minOccurs="0" name="Payee" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="EndorserOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0"
+                        name="EndorserAccountDetails" type="AccDetails"/>
+                    <xs:element minOccurs="0" name="Endorser" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="SuspectOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="SuspectAccountDetails"/>
+                    <xs:element minOccurs="0" name="Suspect" type="TransactionPersonInfo"/>                    
+                    <xs:element minOccurs="0" ref="ItemSequenceNumber"/>
+                    <xs:element minOccurs="0" ref="PostingDate"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="ItemSequenceNumber" type="xs:string"/>
+    <xs:element name="PostingDate" type="xs:date"/>
+    <xs:complexType name="TransactionPersonInfo">
+        <xs:sequence>
+            <xs:element name="CustomerType">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:pattern value="P|C"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element minOccurs="0" name="PersonName">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" ref="FirstName"/>
+                        <xs:element minOccurs="0" ref="LastName"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element minOccurs="0" ref="CompanyName"/>
+            <xs:element minOccurs="0" ref="RelationshipToCase"/>
+            <xs:element minOccurs="0" name="CustomerId" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="AccDetails">
+        <xs:sequence>
+            <xs:element ref="AccountNumber"/>
+            <xs:element name="AccountDescription" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="DebitCardTransaction" type="DebitCardTransactionInfo"/>
+    <xs:complexType name="DebitCardTransactionInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element minOccurs="0"
+                        name="DebitCardTransactionType" type="xs:string"/>
+                    <!--
+                        Values: ATM,Checkcard Debit - Card Present,Ckcd Debit - Card Not Present,Merchant,Online,POS Debit,Reg E 												  Dispute,Retail
+                    -->
+                    <xs:element minOccurs="0" name="AccountOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" name="CardAccountDetails" type="AccDetails"/>
+                    <xs:element minOccurs="0" name="CardHolderName" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="CardHolderNumber" type="xs:string"/>
+                    <xs:element minOccurs="0" name="CardType" type="xs:string"/>
+                    <xs:element minOccurs="0" name="TransactionAmount" type="Amount"/>
+                    <xs:element ref="IncludeInRisk"/>
+                    <xs:element minOccurs="0" name="LossAmount" type="Amount"/>
+                    <xs:element minOccurs="0" name="MerchantName" type="xs:string"/>
+                    <xs:element minOccurs="0" ref="NAICSCode"/>
+                    <xs:element minOccurs="0" ref="ShipTo"/>
+                    <xs:element minOccurs="0" ref="ShipToAddress"/>
+                    <xs:element minOccurs="0" name="ClaimNumber" type="xs:string"/>
+                    <xs:element minOccurs="0" name="CreditAmount" type="Amount"/>
+                    <xs:element minOccurs="0" ref="Disposition"/>
+                    <xs:element minOccurs="0" name="ClaimDate" type="xs:date"/>
+                    <xs:element minOccurs="0"
+                        name="ProvisionalCreditDate" type="xs:date"/>
+                    <xs:element minOccurs="0" ref="TerminalID"/>
+                    <xs:element minOccurs="0" ref="AffiliateNumber"/>
+                    <xs:element minOccurs="0" ref="State"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="GeneralFraudTransaction" type="GenFraudTransactionInfo"/>
+    <xs:complexType name="GenFraudTransactionInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element minOccurs="0" ref="IncidentOrigin"/>
+                    <xs:element minOccurs="0" name="LossLocation" type="xs:integer"/>
+                    <xs:element minOccurs="0" name="GenFraudMethod" type="FraudMethod"/>
+                    <xs:element minOccurs="0" name="ItemDate" type="xs:date"/>
+                    <xs:element minOccurs="0" ref="ItemNumber"/>
+                    <xs:element minOccurs="0" name="RiskAmount" type="Amount"/>
+                    <xs:element ref="IncludeInRisk"/>
+                    <xs:element minOccurs="0" name="LossAmount" type="Amount"/>
+                    <xs:element minOccurs="0" name="DraweeOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="DraweeAccountDetails"/>
+                    <xs:element minOccurs="0" name="Drawee" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="DepositorOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="DepositorAccountDetails"/>
+                    <xs:element minOccurs="0" name="Depositor" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="SuspectOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="SuspectAccountDetails"/>
+                    <xs:element minOccurs="0" name="Suspect" type="TransactionPersonInfo"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="ACHFraud" type="ACHFraudTransactionInfo"/>
+    <xs:complexType name="ACHFraudTransactionInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element minOccurs="0" ref="IncidentOrigin"/>
+                    <xs:element minOccurs="0" name="LossLocation" type="xs:integer"/>
+                    <xs:element minOccurs="0" name="GenFraudMethod" type="FraudMethod"/>
+                    <xs:element minOccurs="0" name="ItemDate" type="xs:date"/>
+                    <xs:element minOccurs="0" ref="ItemNumber"/>
+                    <xs:element minOccurs="0" name="RiskAmount" type="Amount"/>
+                    <xs:element ref="IncludeInRisk"/>
+                    <xs:element minOccurs="0" name="LossAmount" type="Amount"/>
+                    <xs:element minOccurs="0" name="OriginatorOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="OriginatorAccountDetails"/>
+                    <xs:element minOccurs="0" name="Originator" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="ReceiverOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="ReceiverAccountDetails"/>
+                    <xs:element minOccurs="0" name="Receiver" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="SuspectOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="SuspectAccountDetails"/>
+                    <xs:element minOccurs="0" name="Suspect" type="TransactionPersonInfo"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="WireFraud" type="WireFraudTransactionInfo"/>
+    <xs:complexType name="WireFraudTransactionInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element minOccurs="0" ref="IncidentOrigin"/>
+                    <xs:element minOccurs="0" name="LossLocation" type="xs:integer"/>
+                    <xs:element minOccurs="0" name="GenFraudMethod" type="FraudMethod"/>
+                    <xs:element minOccurs="0" name="ItemDate" type="xs:date"/>
+                    <xs:element minOccurs="0" ref="ItemNumber"/>
+                    <xs:element minOccurs="0" name="RiskAmount" type="Amount"/>
+                    <xs:element ref="IncludeInRisk"/>
+                    <xs:element minOccurs="0" name="LossAmount" type="Amount"/>
+                    <xs:element minOccurs="0" name="OriginatorOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="OriginatorAccountDetails"/>
+                    <xs:element minOccurs="0" name="Originator" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="ReceiverOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="ReceiverAccountDetails"/>
+                    <xs:element minOccurs="0" name="Receiver" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="SuspectOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="SuspectAccountDetails"/>
+                    <xs:element minOccurs="0" name="Suspect" type="TransactionPersonInfo"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="InternalFraud" type="InternalFraudTransactionInfo"/>
+    <xs:complexType name="InternalFraudTransactionInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element minOccurs="0" ref="IncidentOrigin"/>
+                    <xs:element minOccurs="0" name="LossLocation" type="xs:integer"/>
+                    <xs:element minOccurs="0" name="GenFraudMethod" type="FraudMethod"/>
+                    <xs:element minOccurs="0" name="ItemDate" type="xs:date"/>
+                    <xs:element minOccurs="0" ref="ItemNumber"/>
+                    <xs:element minOccurs="0" name="RiskAmount" type="Amount"/>
+                    <xs:element ref="IncludeInRisk"/>
+                    <xs:element minOccurs="0" name="LossAmount" type="Amount"/>
+                    <xs:element minOccurs="0" name="CustomerOnUs" type="OnUsFlag"/>
+                    <xs:element minOccurs="0" ref="CustomerAccountDetails"/>
+                    <xs:element minOccurs="0" name="Customer" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="SuspectOnUs" type="OnUsFlag"/>
+                    <xs:element minOccurs="0" ref="SuspectAccountDetails"/>
+                    <xs:element minOccurs="0" name="Suspect" type="TransactionPersonInfo"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="GovernmentReclamation" type="GovernmentReclamationTransactionInfo"/>
+    <xs:complexType name="GovernmentReclamationTransactionInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element minOccurs="0" ref="IncidentOrigin"/>
+                    <xs:element minOccurs="0" name="LossLocation" type="xs:integer"/>
+                    <xs:element minOccurs="0" name="GenFraudMethod" type="FraudMethod"/>
+                    <xs:element minOccurs="0" name="ItemDate" type="xs:date"/>
+                    <xs:element minOccurs="0" ref="ItemNumber"/>
+                    <xs:element minOccurs="0" name="RiskAmount" type="Amount"/>
+                    <xs:element ref="IncludeInRisk"/>
+                    <xs:element minOccurs="0" name="LossAmount" type="Amount"/>
+                    <xs:element minOccurs="0" name="CustomerOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="CustomerAccountDetails"/>
+                    <xs:element minOccurs="0" name="Customer" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="SuspectOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="SuspectAccountDetails"/>
+                    <xs:element minOccurs="0" name="Suspect" type="TransactionPersonInfo"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="OperationalLoss" type="OperationalLossTransactionInfo"/>
+    <xs:complexType name="OperationalLossTransactionInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element minOccurs="0" ref="IncidentOrigin"/>
+                    <xs:element minOccurs="0" name="LossLocation" type="xs:integer"/>
+                    <xs:element minOccurs="0" name="GenFraudMethod" type="FraudMethod"/>
+                    <xs:element minOccurs="0" name="ItemDate" type="xs:date"/>
+                    <xs:element minOccurs="0" ref="ItemNumber"/>
+                    <xs:element minOccurs="0" name="RiskAmount" type="Amount"/>
+                    <xs:element ref="IncludeInRisk"/>
+                    <xs:element minOccurs="0" name="LossAmount" type="Amount"/>
+                    <xs:element minOccurs="0" name="CustomerOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="CustomerAccountDetails"/>
+                    <xs:element minOccurs="0" name="Customer" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="SuspectOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="SuspectAccountDetails"/>
+                    <xs:element minOccurs="0" name="Suspect" type="TransactionPersonInfo"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="CreditCardTransaction" type="CreditCardTransactionInfo"/>
+    <xs:complexType name="CreditCardTransactionInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element name="CreditCardTransactionType" type="xs:string"/>
+                    <!--
+                        Values: FI,Merchant,Online,Retail
+                    -->
+                    <xs:element minOccurs="0" name="CardHolderOnUs" type="xs:boolean"/>
+                    <xs:element minOccurs="0" ref="CardHolderNumber"/>                    
+                    <xs:element minOccurs="0" name="CardHolderName" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="TransactionAmount" type="Amount"/>
+                    <xs:element ref="IncludeInRisk"/>
+                    <xs:element minOccurs="0" name="LossAmount" type="Amount"/>
+                    <xs:element minOccurs="0" name="MerchantOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0"
+                        name="MerchantAccountDetails" type="AccDetails"/>
+                    <xs:element minOccurs="0" name="MerchantName" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" ref="NAICSCode"/>
+                    <xs:element minOccurs="0" ref="ShipTo"/>
+                    <xs:element minOccurs="0" ref="ShipToAddress"/>
+                    <xs:element minOccurs="0" ref="Disposition"/>
+                    <xs:element minOccurs="0" ref="TerminalID"/>
+                    <xs:element minOccurs="0" ref="AffiliateNumber"/>
+                    <xs:element minOccurs="0" ref="State"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="BSATransaction" type="BSATransactionInfo"/>
+    <xs:complexType name="BSATransactionInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element name="BSATransactionType" type="xs:string"/>
+                    <!--
+                        Values: Cashiers Check,Check,Wire
+                    -->
+                    <xs:element minOccurs="0" ref="IncidentOrigin"/>
+                    <xs:element minOccurs="0" name="ItemDate" type="xs:date"/>
+                    <xs:element minOccurs="0" name="TransactionAmount" type="Amount"/>
+                    <xs:element minOccurs="0" ref="ItemNumber"/>
+                    <xs:element minOccurs="0" name="DraweeOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="DraweeAccountDetails"/>
+                    <xs:element minOccurs="0" name="Drawee" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="DepositorOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="DepositorAccountDetails"/>
+                    <xs:element minOccurs="0" name="Depositor" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="EndorserOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0"
+                        name="EndorserAccountDetails" type="xs:string"/>
+                    <xs:element minOccurs="0" name="Endorser" type="TransactionPersonInfo"/>
+                    <xs:element minOccurs="0" name="SuspectOnUs" type="OnUsFlag" default="0"/>
+                    <xs:element minOccurs="0" ref="SuspectAccountDetails"/>
+                    <xs:element minOccurs="0" name="Suspect" type="TransactionPersonInfo"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="Robbery" type="RobberyInfo"/>
+    <xs:complexType name="RobberyInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="NoOfRobbers" type="xs:integer" default="0"/>
+                    <xs:element minOccurs="0" name="RobbersArrested" type="xs:integer" default="0"/>
+                    <xs:element minOccurs="0" name="StaffInBank" type="xs:integer" default="0"/>
+                    <xs:element minOccurs="0" name="Injuries" type="xs:integer" default="0"/>
+                    <xs:element minOccurs="0" name="LossAmount" type="Amount"/>
+                    <xs:element ref="IncludeInRisk"/>
+                    <xs:element minOccurs="0" name="TellersRobbed" type="xs:integer" default="0"/>
+                    <xs:element minOccurs="0" name="TakeOver" type="xs:boolean" default="0"/>
+                    <xs:element minOccurs="0"
+                        name="RobberyDocumentFiled" type="xs:boolean" default="0"/>
+                    <xs:element minOccurs="0" name="WeaponDisplayed" type="xs:boolean" default="0"/>
+                    <xs:element minOccurs="0" name="ArrestMade" type="xs:boolean" default="0"/>
+                    <xs:element minOccurs="0" name="VaultRobbed" type="xs:boolean" default="0"/>
+                    <xs:element minOccurs="0" name="DyePacksGiven" type="xs:boolean" default="0"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="PropertyTheft" type="PropertyTheftInfo"/>
+    <xs:complexType name="PropertyTheftInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="RiskAmount" type="Amount"/>
+                    <xs:element ref="IncludeInRisk"/>
+                    <xs:element minOccurs="0" name="LossAmount" type="Amount"/>
+                    <xs:element minOccurs="0" name="PoliceReportDate" type="xs:date"/>
+                    <xs:element minOccurs="0"
+                        name="InternalTheftReportDate" type="xs:date"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="WorkplaceViolence" type="WorkplaceViolenceInfo"/>
+    <xs:complexType name="WorkplaceViolenceInfo">
+        <xs:complexContent>
+            <xs:extension base="BasicTransactionInfo">
+                <xs:sequence>
+                    <xs:element minOccurs="0" ref="IncidentOrigin"/>
+                    <xs:element minOccurs="0" name="OngoingProblemSince" type="xs:date"/>
+                    <xs:element minOccurs="0"
+                        name="SecurityInvolvementDate" type="xs:date"/>
+                    <xs:element minOccurs="0" name="ThreatAssessment" type="xs:string"/>
+                    <xs:element minOccurs="0"
+                        name="ThreatAssessmentDate" type="xs:date"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="CaseRecoveriesAndPrevents">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="RecoveryGroup">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:pattern value="Investigation|Process"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <xs:element name="Type">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:pattern value="Recovery|Prevent"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <xs:element minOccurs="0" name="Date" type="xs:date"/>
+                <xs:element name="Amount" type="Amount"/>
+                <xs:element minOccurs="0" name="TypeOfRecovery" type="xs:string"/>
+                <!--
+                    values: CUNA, Customer Account, Customer liability, Customer Payment, Hold Harmless, Member, Merchant, Merchant 										 Credit, Right To Offset, Valid Charge, Visa Arbitration, Visa Chargeback, Visa Compliance, Visa 													 Pre-arbitration, Visa Pre-Compliance, Write Off
+                -->
+                <xs:element minOccurs="0" name="Source" type="xs:string"/>
+                <!--
+                    values: Another Account, Another Institution, Charge Back, Court Ordered, CUNA, Customer, Internal, 											  Investigations, Loss Management, LRU, Merchant, Other, Restitution, Settlement, Write Off
+                -->
+                <xs:element minOccurs="0" name="Investigator" type="xs:integer"/>
+                <xs:element minOccurs="0" ref="Description"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0"
+                    name="RecoveryCredit" type="ChargeOffInformation"/>
+                <xs:element minOccurs="0" ref="EnteredBy"/>
+                <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Attachments">
+        <xs:sequence>
+            <xs:element name="AttachmentType">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:pattern value="File|URL"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element minOccurs="0" ref="FileAttachment"/>
+            <xs:element minOccurs="0" ref="Url"/>
+            <xs:element minOccurs="0" name="AttachmentDate" type="xs:date"/>
+            <xs:element minOccurs="0" ref="Source"/>
+            <xs:element minOccurs="0" ref="Description"/>
+            <xs:element minOccurs="0" ref="EnteredBy"/>
+            <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="FileAttachment">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="MimeType" type="xs:string"/>
+                <!--
+                    Values: application/msword,application/mspowerpoint,application/msword,application/excel,text/plain,audio/wav,
+                            application/rtf,application/pdf,image/jpeg,image/png,image/gif,text/html
+                -->
+                <xs:element name="FileName">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <xs:element name="Content" type="xs:base64Binary"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CaseNotes">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="NoteType"/>
+                <xs:element ref="DateTimeofNote"/>
+                <xs:element ref="NoteText"/>
+                <xs:element minOccurs="0" ref="EnteredBy"/>
+                <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="NoteType" type="xs:string"/>
+    <!--
+        Values: Incident Notes,Investigation,Case Closing Note,Need Not File SAR,Executive Summary Notes,Recovery Notes,Recovery 							 Reminder Type
+    -->
+    <xs:element name="DateTimeofNote" type="xs:dateTime"/>
+    <xs:element name="NoteText" type="xs:string"/>
+    <xs:element name="EnteredBy" type="xs:integer"/>
+    <xs:element name="Source">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="RelationshipToCase" type="xs:string"/>
+    <!--
+        Values: Suspect,Victim,Witness,Police Officer,Unknown
+    -->
+    <xs:element name="RelationshipToOrganization" type="xs:string"/>
+    <!--
+        Values: Accountant,Agent,Appraiser,Attorney,Borrower,Broker,Customer,Director,Employee,Officer,Shareholder,Other
+    -->
+    <xs:element name="AddressType">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:pattern value="Work|Home"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="AddressLine1">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="AddressLine2">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="City">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="State">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:enumeration value="AL"/>
+                <xs:enumeration value="AK"/>
+                <xs:enumeration value="AS"/>
+                <xs:enumeration value="AZ"/>
+                <xs:enumeration value="AR"/>
+                <xs:enumeration value="CA"/>
+                <xs:enumeration value="CO"/>
+                <xs:enumeration value="CT"/>
+                <xs:enumeration value="DE"/>
+                <xs:enumeration value="DC"/>
+                <xs:enumeration value="FM"/>
+                <xs:enumeration value="FL"/>
+                <xs:enumeration value="GA"/>
+                <xs:enumeration value="GU"/>
+                <xs:enumeration value="HI"/>
+                <xs:enumeration value="ID"/>
+                <xs:enumeration value="IL"/>
+                <xs:enumeration value="IN"/>
+                <xs:enumeration value="IA"/>
+                <xs:enumeration value="KS"/>
+                <xs:enumeration value="KY"/>
+                <xs:enumeration value="LA"/>
+                <xs:enumeration value="ME"/>
+                <xs:enumeration value="MH"/>
+                <xs:enumeration value="MD"/>
+                <xs:enumeration value="MA"/>
+                <xs:enumeration value="MI"/>
+                <xs:enumeration value="MN"/>
+                <xs:enumeration value="MS"/>
+                <xs:enumeration value="MO"/>
+                <xs:enumeration value="MT"/>
+                <xs:enumeration value="NE"/>
+                <xs:enumeration value="NV"/>
+                <xs:enumeration value="NH"/>
+                <xs:enumeration value="NJ"/>
+                <xs:enumeration value="NM"/>
+                <xs:enumeration value="NY"/>
+                <xs:enumeration value="NC"/>
+                <xs:enumeration value="ND"/>
+                <xs:enumeration value="MP"/>
+                <xs:enumeration value="OH"/>
+                <xs:enumeration value="OK"/>
+                <xs:enumeration value="OR"/>
+                <xs:enumeration value="PW"/>
+                <xs:enumeration value="PA"/>
+                <xs:enumeration value="PR"/>
+                <xs:enumeration value="RI"/>
+                <xs:enumeration value="SC"/>
+                <xs:enumeration value="SD"/>
+                <xs:enumeration value="TN"/>
+                <xs:enumeration value="TX"/>
+                <xs:enumeration value="UT"/>
+                <xs:enumeration value="VT"/>
+                <xs:enumeration value="VI"/>
+                <xs:enumeration value="VA"/>
+                <xs:enumeration value="WA"/>
+                <xs:enumeration value="WV"/>
+                <xs:enumeration value="WI"/>
+                <xs:enumeration value="WY"/>
+                <xs:enumeration value="AE"/>
+                <xs:enumeration value="NA"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="Zip">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:pattern value="[0-9]{9}"/>
+                <xs:pattern value="[0-9]{5}"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="Country">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="20"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="AccountNumber">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="AccountType" type="xs:string"/>
+    <!--
+        Values: Certificate of Deposit,Checking Account,Credit Card,Debit Card,Loan,Money Market,Safedep bx,Savings Account
+    -->
+    <xs:element name="Description">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="4000"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:simpleType name="Amount">
+        <xs:restriction base="xs:decimal">
+            <xs:minInclusive value="0"/>
+            <xs:maxInclusive value="10000000"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="FraudMethod">
+        <xs:restriction base="xs:string"/>
+        <!--
+            Values: ACH,ATM,ATM Deposit,ATM Withdrawal,Checking Withdrawal,Ck Card Debit,Deposit,Merchant Cashed,Other Bank 										  Cashed/Deposited,Savings Withdrawal,Split Deposit,Teller Cashed,Teller-OTC,Transit Cashed,Wire
+        -->
+    </xs:simpleType>
+    <xs:element name="NAICSCode">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="38"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="ShipTo">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="ShipToAddress">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="TerminalID">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="10"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="AffiliateNumber">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="38"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="IncidentOrigin" type="xs:string"/>
+    <!--
+                Values: Branches,Card Group,Check Fraud Detect,ChexAlert,Client,Customer,DepositChek,Early 																		Warning,Employee,Financial Institution,Hold(s) Placed,Internal Process,Kite 																				Report,Legal,Member,Non-Client,Non-Customer,RDI,Risk Services,Security
+            -->
+    <xs:element name="ItemNumber">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element default="1" name="IncludeInRisk">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:pattern value="1|0"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="CardHolderNumber">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="Disposition" type="xs:string"/>
+    <!--
+        Values: Accepted,Arbitration,CAC,CCL,CCP,CET,CFP,Chargeback,CLA,CLC,CLD,Closed,CLP,CLR,Compliance,Copy 													 Requested,CSP,CSR,CST,Denied,Merchant Credit,OPN,Pending,Pre-arbitration,Pre-compliance
+    -->
+    <xs:element name="DraweeAccountDetails" type="AccDetails"/>
+    <xs:element name="OriginatorAccountDetails" type="AccDetails"/>
+    <xs:element name="ReceiverAccountDetails" type="AccDetails"/>
+    <xs:element name="DepositorAccountDetails" type="AccDetails"/>
+    <xs:element name="CustomerAccountDetails" type="AccDetails"/>
+    <xs:element name="SuspectAccountDetails" type="AccDetails"/>
+    <xs:complexType name="ChargeOffInformation">
+        <xs:sequence>
+            <xs:element name="ChargeOffOrCreditDate" type="xs:date"/>
+            <xs:element name="Amount" type="Amount"/>
+            <xs:element minOccurs="0" name="GLCode" type="xs:string"/>
+            <!--Location Id-->
+            <xs:element minOccurs="0" name="CostCentre" type="xs:integer"/>
+
+            <xs:element minOccurs="0" name="Reason">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:maxLength value="255"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element minOccurs="0" name="ApprovedBy">
+                <!--Need not be AFM user-->
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:maxLength value="40"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OnUsFlag">
+            <xs:restriction base="xs:integer">
+                <xs:pattern value="1|0"/>
+            </xs:restriction>
+    </xs:simpleType>
+    
+</xs:schema>
+            						

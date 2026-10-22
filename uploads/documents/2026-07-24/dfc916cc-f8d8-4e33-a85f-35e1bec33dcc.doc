@@ -1,0 +1,420 @@
+﻿
+1. Give the header for all the classes and JSP pages like below...
+
+	Eg :
+			/* Project Name  	: CIBC MCBR
+			* Client			: CIBC
+			* File Name		: SQLConstants.java
+			* Author			: Agasthian.V
+			* Created Date		: Feb 15 2005
+			* Purpose			: Interface used to contain the MCBR SQL commands
+			*/
+
+			
+2.  Give the javaDoc for the classes .Give neccessary details about class regarding their functionality. The details about the class given in the class header and javaDoc should be same.
+
+	Eg :
+			/**
+			* Interface used to contain the MCBR SQL commands
+			* 
+			* @version 1.0
+			* @author agasthian Feb 15 2005
+			*/
+
+
+3. Dont use 'public' and 'static'   keyword in the interfaces. They are default and implicit.
+
+
+4. Give JavaDoc for each and every fields which are defined in interfaces.
+
+	Eg :		
+		
+	/**
+	 * Field FLAG_ONE.
+	 * (value is 1)
+	 */
+	int FLAG_ONE=1;
+	
+	 /**
+	  * Field USERROLESDATA_ADD.
+	  * (value is ""insert into userroles(userid,roleid,lastupdateddate) values(?,?,sysdate)"")
+	  */
+	 String USERROLESDATA_ADD = "insert into userroles(userid,roleid,lastupdateddate) values(?,?,sysdate)";
+
+
+5.	Move the common functionalities in  various classes into Util class and make the utility class as reusable.
+
+
+6.    Give the neccessary comments when some logic is coded. Do it at the time of coding. doing at the end will be tedious and time consuming.
+
+	Eg	:
+			        
+			/* getting the selected channels for image*/
+			int channelId = 0;
+			while (imageChannelsTokens.hasMoreElements()) {
+			channel = imageChannelsTokens.nextToken();
+			imagePermissionChannels.add(channel);
+			channelId = Integer.parseInt(channel) - 1;
+			newChannels[channelId][1] = LiteralConstants.YES;
+			}
+			
+7. 	Dont use System.out.println() in your code at the time of coding. Use Log4J framework. Implementing Log4j at the end, is also time consuming.
+
+8	Give javaDoc for each and every methods. @param,@return and @throws are neccessary.Give the commenst clearly So that  we can understand method's functionaly at any time.
+
+	Eg:
+				/**
+				* Method used to call the command layer and get the result values
+				*
+				* @param commandName methodName
+				* @param friendlyName friendlyName
+				* @param types arugument class types
+				* @param arguments arguments
+				* @param className Class Name
+				* @return Result object
+				* @throws Exception
+				*/
+					public Object getValuesFromCommand(String commandName, String friendlyName,
+					Class[] types, Object[] arguments, Class className) throws Exception {.....................
+					
+9	Dont use String,int and char literals in the java classes.Move them in to common initerface.
+
+	Eg:
+	
+		String name="merchant"; /* Dont use string literal like this*/
+		
+		String name=LiteralConstants.NAME; /* Use like this*/
+		
+10 	Dont declare any variable in loop.Create instance outside of the loop and use it.
+
+	Eg:
+			/*This is wrong*/
+			for(int i=0;i<10;i++){
+				String sample = List.get(i);
+			}
+
+			/*This is fine*/
+			String sample=LiteralConstans.EMPTYSTRING ;/*assigning empty string*/
+			for(int i=0;i<10;i++){
+				sample = List.get(i);
+			}
+			
+11  Dont use strings when the concatenation is done.This will create lot of instances  and consumes memory.Use stringBuffer .
+
+	Eg	:	
+			/*This is not fine*/
+			String s="sample";
+			s=s+"end";
+			
+			/*This is fine*/
+			StringBuffer s=new StringBuffer("sample");
+			s.append("end");
+
+12 Avoid condition checkings in if loop like below....
+
+	Eg:		
+			/*This is not fine*/
+			if(s!=null){
+				if(s.equals("one)){
+				/* code*/
+				}
+			}	
+	
+			/*This is fine*/
+			if( s!=null && s.equals("one) ){
+			/*code*/
+			} 
+			
+13	 Cleanup the objects when  the objects are no more need.Close database connections,resultsets and statements properly.
+
+
+14	Use log.trace() at starting and ending of the method.  Use log.debug()  when you want to log some inofmrations. Use log.fatal() when the applicaion throws severe exception. log.error() when the application throws particular defined exception.
+
+	Eg :
+	
+			private List searchResult(String sqlCount_Query, String sqlSearch_Query, String strSQL, List paramList, int maxRecord) throws DAOException,BillRegAppException {
+			List merchantSearchLst = null;
+				if (log.isTraceEnabled()) {
+					log.trace(MethodNames.SEARCHRESULT + LiteralConstants.METHODSTART);
+				}
+				/*		 Execute the Query to find out record count for this particular search option */
+			
+				merchantSearchLst = (List) executePSQuery(sqlCount_Query + LiteralConstants.EMPTYSPACE + strSQL, paramList);
+				if (merchantSearchLst != null) {
+					String[] strNoRecord = (String[]) merchantSearchLst.get(0);
+					/*
+					* If the Record Cound is greater than displayed search record (XML
+					* read value), throw user define exception.
+					*/
+			
+					if (strNoRecord != null && Integer.parseInt(strNoRecord[0]) > maxRecord) {
+						BillRegAppException billRegExp = new BillRegAppException(ErrorConstants.APP_MORERECORD,
+							"Number of returned records is greater than [Actual limit] -  " + maxRecord);
+						if (log.isErrorEnabled()) {
+							log.error(LiteralConstants.ERROR, billRegExp);
+						}
+						throw billRegExp;
+					} else if (strNoRecord != null) {
+					/*
+						* Execute the Query to fetch the search criteria values.
+						*/
+					merchantSearchLst = (List) executePSQuery(sqlSearch_Query + LiteralConstants.EMPTYSPACE + strSQL, paramList);
+					}
+				}
+			if (log.isTraceEnabled()) {
+				log.trace(MethodNames.SEARCHRESULT + LiteralConstants.METHODEND);
+			}
+			return merchantSearchLst;
+			}
+
+11	Number of lines in a class should not be greater than 1000. Number of lines in one method should not be greater than 100. single line length should not be geater than 80 characters.
+
+12 	Use variable names as reasonable with naming convention. Avoid abbreviations whenever there is better words to use. Use capital letters for constant variables.
+
+		Eg :
+				Naming Conventions
+
+						packages
+							lowercase.
+							Consider using the recommended domain-based conventions described in the Java Language Specification, page 107 as prefixes. (For example, EDU.oswego.cs.dl.) 
+						
+						files
+							The java compiler enforces the convention that file names have the same base name as the public class they define. 
+						
+						classes:
+							CapitalizedWithInternalWordsAlsoCapitalized 
+						
+						Exception class:
+							ClassNameEndsWithException. 
+						
+						Interface. When necessary to distinguish from similarly named classes:
+							InterfaceNameEndsWithIfc. 
+						
+						Class. When necessary to distinguish from similarly named interfaces:
+							ClassNameEndsWithImpl OR 
+							ClassNameEndsWithObject 
+						
+						constants (finals):
+							UPPER_CASE_WITH_UNDERSCORES 
+						
+						private or protected: (pick one!)
+							firstWordLowerCaseButInternalWordsCapitalized OR 
+							trailingUnderscore_, OR 
+							thisVar (i.e. prefix with this), OR 
+							myVar (i.e. prefix with my), OR 
+							fVar (i.e. prefix with f)
+						
+						static private or protected:
+							firstWordLowerCaseButInternalWordsCapitalized OR 
+							twoTrailingUnderscores__ 
+						
+						local variables:
+							firstWordLowerCaseButInternalWordsCapitalized OR 
+							lower_case_with_underscores 
+						
+						methods:
+							firstWordLowerCaseButInternalWordsCapitalized() 
+							factory method for objects of type X:
+							newX 
+						
+						converter method that returns objects of type X:
+							toX 
+						
+						method that reports an attribute x of type X:
+							X x() or X getX(). 
+						
+						method that changes an attribute x of type X:
+							void x(X value) or void setX(X value). 
+
+
+	
+
+13  If the action class needs session variable use it as local  private variable . Remove the session variable when the that variable's scope is over.
+
+14. Dont use java scriptlet in JSP pages. use struts  framework tags.
+
+15 Move common javascript functions to common JS file. Give necessary comments in javaScript methods.
+
+16.	Dont hardcode page contents in JSP file. Use ApplicationReaources.properties file.
+
+17.	Avoid conditional operators. It makes the code harder to understand.
+
+18.	Avoid calling same function again and again in a method. Assign the returning variable in to local variable and use it. Calling functions so much time increaces the memory stack.
+
+		Eg:
+				/* this is not fine*/
+				if( merchantForm.getUserId()!=null &&  merchantForm.getUserId().equals("ebo")){
+					pageBean.setUserId(merchantForm.getUserId());
+				}
+				
+				/*this is fine*/
+				String userId = merchantForm.getUserId();
+				if( userId!=null &&  userId.equals("ebo")){
+					pageBean.setUserId(userId);
+				}
+
+				
+19.	 Avoid using the same name as the incoming parameter. Assign into a local variable and use it.
+
+		Eg:
+				/* This is not fine*/
+				public String sampleMethod(String userId){
+					
+					if(userId.equals("1")){
+						userId="2";
+					}
+					return userId;
+				}
+
+
+				/* This is fine*/
+				public String sampleMethod(String userId){
+					String localUserId=userId;
+					if(localUserId.equals("1")){
+						localUserId="2";
+					}
+					return localUserId;
+				}
+				
+20	Avoid using StringTokenizer. use Split API.
+
+
+21.	Dont import Classes using *. Import individual classes which the code wants. 
+
+		Eg :	
+				/* Avoid This*/
+				import org.apache.commons.logging.*;
+
+				/* This is OK*/
+				import org.apache.commons.logging.Log;
+	
+				
+22	Define the formBean and pageBean variables as private and make the getter methods  as public.
+
+23.	Close the tags properly in JSP pages. Check JSP output often with Internet explorer.
+
+24.	Access the pageBean values using getter method.
+
+		Eg	:	
+				/* This is not fine..*/
+				<%=pageBean.userId%>
+				
+				/* This is fine*/
+				<%=pageBean.getUserId()%>
+				
+25	Use braces even for single statement after for loop or If condition
+
+		Eg:	
+			/* Dont code like this*/
+			if( a==1)
+				System.out.println("OK");
+			
+			/* This is fine*/
+			if(a==1){
+				System.out.println("OK");
+			}	
+			
+			
+27	Import order should be like below
+
+			Java components (java.*)
+			Javax components (javax.*)
+			Apache components (org.apache.*)
+			Open Source/Third Party components (com.* and org.*)
+			Amicus Common components (com.amicus.commons.*)
+			Amicus common framework components (com.amicus.commons.framework.*)
+			Amicus common domain components (com.amicus.commons.domain.*)
+			other Amicus components Feature Code (com.amicus.*)
+			
+28	Dont declare more than one attributes in a single line
+		
+		Eg	:	
+				int i=0,j=20; // Dont use like this
+				
+				/* This is fine*/
+				int i=0;
+				int j=20;
+				
+				
+30	Use one import directive per imported class
+
+Example:
+		/* This is not  fine*/
+		<%@page import=”java.util.HashMap,java.util.Map”%>
+
+		/* This if  fine*/
+		<%@page import=”java.util.HashMap”%>
+		<%@page import=”java.util.Map”%>
+		
+31	A package should contain minimum 5 classes. It should not exceed its maximum limit 50.
+
+
+32.	Dont declare instance variable as public . This will create problems when other classes access the variable.
+
+
+33	 Prefer declaring arrays as Type[] arrayName  rather than Type arrayName[]
+
+	Eg	:	
+			/*Avoid this*/
+			String userList[]=new String[3];
+			
+			/* Use like this*/
+			String[] userList=new String[3];
+			
+34	Avoid method level synchronization. Use block level synchronization.
+
+
+35	Dont use '=='  operator while comparing two strings. Use equals() method.
+
+36	When one java file contains more than one classes then put the public class in top.
+
+37 	Declaring variables should be in following order
+
+ 			First the public class variables, then the protected, then package level (no access modifier), and then the private.
+			
+38	Wrapping the code
+		
+			a)	Break after a comma.
+			
+					var = someMethod1(longExpression1,
+                					someMethod2(longExpression2,
+                        								longExpression3)); 
+										
+			b)	Break before an operator.
+			
+			c) Following are two examples of breaking an arithmetic expression. The first is preferred, since the break occurs outside the parenthesized expression, which is at a higher level.
+
+					longName1 = longName2 * (longName3 + longName4 - longName5)
+						+ 4 * longname6; // PREFER
+					
+					longName1 = longName2 * (longName3 + longName4
+							- longName5) + 4 * longname6; // AVOID 
+
+			d)	Following are two examples of indenting method declarations. The first is the conventional case. The second would shift the second and third lines to the far right if it used conventional indentation, so instead it indents only 8 spaces.
+					
+					//CONVENTIONAL INDENTATION
+					someMethod(int anArg, Object anotherArg, String yetAnotherArg,
+						Object andStillAnother) {
+					...
+					}
+					
+					//INDENT 8 SPACES TO AVOID VERY DEEP INDENTS
+					private static synchronized horkingLongMethodName(int anArg,
+						Object anotherArg, String yetAnotherArg,
+						Object andStillAnother) {
+					...
+					}
+					
+					
+39	Avoid local declarations that hide declarations at higher levels. For example, do not declare the same variable name in an inner block:
+
+		Eg	:
+			int count;
+			...
+			myMethod() {
+			if (condition) {
+				int count = 0;     // AVOID!
+				...
+			}
+			...
+			}

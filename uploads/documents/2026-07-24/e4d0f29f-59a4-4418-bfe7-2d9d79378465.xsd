@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+@Version     : 1.5
+@Created By  : Hari Srinivasan, Aithent
+@Created On  : Apr 16, 2012
+#########################################
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Dec 23, 2011
+@Changes     : Removed value "O" from element "Sex" indicating Organization since this is already specified in "CustomerType"
+#########################################
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Dec 30, 2011
+@Changes     : 1.Included element "MiscIdentifier" to support any number of Person/Company identifiers.
+					2.Included element "Fax" under "AddressInformation" and removed it under "CustomerInformation".
+					3.Replaced elements "HomePhone" and "WorkPhone" with "Pager" and "Mobile" since Phone is already captured as part of 						  AddressInformation based on AddressType as Work/Home
+					4.Included element "IsPrimary" under "AddressInformation"; Values - 1 (primary), 0 (NOT primary, default).
+					5.Restriction on the following drop-list elements has been removed and values specified in the comment section - 								  CardType,AccountOwnership,AccountType,AccountStatus,DocumentType
+#########################################
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Dec 30, 2011
+@Changes     : 1.Replaced values for CustomerType as "P|C" instead of "I|O".
+#########################################					
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Mar 22, 2012
+@Changes     : 1.Removed sub-elements "FirstName" and "LastName" from element "EnteredBy". This will be of type integer and 										correspond to AFM User Id.					
+#########################################					
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Apr 03, 2012
+@Changes     : 1.Included attribute "NoOfCustomers" to the root element "Customer".
+#########################################					
+@Modified By : Hari Srinivasan, Aithent
+@Modified On : Apr 16, 2012
+@Changes     : 1.Changed XSD such that it can support multiple Account Holder information related to an Account.
+					2.Included element "BankName" under Account information.
+					3.Included element "DeceasedDate" under Person information.
+
+-->
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="Customer">
+        <xs:complexType>
+            <xs:sequence>
+					 <xs:element maxOccurs="unbounded" ref="AccountSummary"/>						               
+            </xs:sequence>
+        <xs:attribute name="NoOfAccounts" type="xs:integer"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="AccountSummary">
+        <xs:complexType>
+            <xs:sequence>
+					 <xs:element ref="AccountInformation"/>               
+                <xs:element maxOccurs="unbounded" ref="AccountHolderInformation"/>
+            </xs:sequence>
+        <xs:attribute name="NoOfAccountHolders" type="xs:integer"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="AccountHolderInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="CustomerType"/>                
+                <xs:element minOccurs="0" ref="PersonInformation"/>
+                <xs:element minOccurs="0" ref="CompanyInformation"/>                                
+                <xs:element minOccurs="0" ref="OccupationOrTypeOfBusiness"/>                
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="AddressInformation"/>
+                <xs:element maxOccurs="unbounded" minOccurs="0" ref="BSAInformation"/>                
+                <xs:element minOccurs="0" ref="EnteredBy"/>
+                <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+            </xs:sequence>
+            <xs:attribute name="CustomerId" type="xs:string" use="required"/>
+            <xs:attribute name="AccountOwnership" type="xs:string" use="required"/>
+    				<!--
+        					Values: PrimaryOwner,SecondaryOwner,obligor
+    				-->            
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CustomerType">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:pattern value="P|C"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="PersonInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="FirstName"/>
+                <xs:element minOccurs="0" ref="MiddleName"/>
+                <xs:element ref="LastName"/>
+                <xs:element minOccurs="0" ref="Aka"/>
+                <xs:element minOccurs="0" name="Sex">
+                   <xs:simpleType>
+                      <xs:restriction base="xs:string">
+                         <xs:pattern value="M|F|Null"/>
+                      </xs:restriction>   
+                   </xs:simpleType>   
+                </xs:element>
+                <xs:element minOccurs="0" name="Title" type="xs:string"/>
+                <xs:element minOccurs="0" name="DOB" type="xs:date"/>
+                <xs:element minOccurs="0" name="SSNOrTIN" type="IdentificationNumber"/>
+                <xs:element minOccurs="0" name="Pager" type="PhoneType"/>
+                <xs:element minOccurs="0" name="Mobile" type="PhoneType"/>                                
+                <xs:element minOccurs="0" name="CitizenshipCode" type="xs:string"/>
+                <xs:element minOccurs="0" name="Employer" type="xs:string"/>
+                <xs:element minOccurs="0" name="EmploymentNumber" type="xs:string"/>
+                <xs:element minOccurs="0" name="CustomerSince" type="xs:date"/>
+                <xs:element minOccurs="0" name="W8Cert" type="xs:string"/>
+                <xs:element minOccurs="0" name="Email" type="xs:string"/>
+                <xs:element minOccurs="0" name="Weight" type="xs:string"/>
+                <xs:element minOccurs="0" name="EyeColor" type="xs:string"/>
+                <xs:element minOccurs="0" name="DeceasedDate" type="xs:date"/>
+                <xs:element minOccurs="0" maxOccurs="unbounded" name="MiscIdentifier">
+                   <xs:complexType>
+                   		<xs:sequence>
+                				<xs:element name="IdName" type="xs:string"/>
+                				<xs:element name="IdValue" type="xs:string"/>
+            				</xs:sequence>
+                   </xs:complexType>
+                </xs:element>   
+                <xs:element minOccurs="0" ref="EnteredBy"/>
+                <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CompanyInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="CompanyName">
+                   <xs:simpleType>
+            			<xs:restriction base="xs:string">
+                			<xs:minLength value="1"/>
+                			<xs:maxLength value="60"/>
+            			</xs:restriction>
+        				 </xs:simpleType>
+                </xs:element>
+                <xs:element minOccurs="0" name="EIN" type="IdentificationNumber"/>   
+                <xs:element minOccurs="0" name="Url">
+                   <xs:simpleType>
+            			<xs:restriction base="xs:anyURI">
+                			<xs:maxLength value="255"/>
+            			</xs:restriction>
+        				 </xs:simpleType>
+                </xs:element>   
+                <xs:element minOccurs="0" name="BusinessDescription" type="xs:string"/>
+                <xs:element minOccurs="0" maxOccurs="unbounded" name="MiscIdentifier">
+                   <xs:complexType>
+                   		<xs:sequence>
+                				<xs:element name="IdName" type="xs:string"/>
+                				<xs:element name="IdValue" type="xs:string"/>
+            				</xs:sequence>
+                   </xs:complexType>
+                </xs:element>
+                <xs:element minOccurs="0" ref="EnteredBy"/>
+                <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>    
+    </xs:element>
+    <xs:element name="FirstName">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="MiddleName">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="LastName">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="Aka">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="Alias"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="Alias">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="100"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="OccupationOrTypeOfBusiness">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="100"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:simpleType name="IdentificationNumber">
+        <xs:restriction base="xs:integer">
+            <xs:pattern value="[0-9]{9}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:element name="AddressInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="AddressType"/>
+                <xs:element name="IsPrimary" default="0">
+       					<xs:simpleType>
+            				<xs:restriction base="xs:integer">
+                				<xs:pattern value="1|0"/>
+            				</xs:restriction>
+        					</xs:simpleType>
+    				 </xs:element>
+                <xs:element minOccurs="0" ref="AddressLine1"/>
+                <xs:element minOccurs="0" ref="AddressLine2"/>
+                <xs:element minOccurs="0" ref="City"/>
+                <xs:element minOccurs="0" ref="State"/>
+                <xs:element minOccurs="0" ref="Zip"/>
+                <xs:element minOccurs="0" ref="Country"/>
+                <xs:element minOccurs="0" name="Phone" type="PhoneType"/>
+                <xs:element minOccurs="0" name="Fax" type="PhoneType"/>
+                <xs:element minOccurs="0" ref="EnteredBy"/>
+                <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="AddressType">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:pattern value="Work|Home"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="AddressLine1">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="AddressLine2">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="City">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="State">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:enumeration value="AL"/>
+                <xs:enumeration value="AK"/>
+                <xs:enumeration value="AS"/>
+                <xs:enumeration value="AZ"/>
+                <xs:enumeration value="AR"/>
+                <xs:enumeration value="CA"/>
+                <xs:enumeration value="CO"/>
+                <xs:enumeration value="CT"/>
+                <xs:enumeration value="DE"/>
+                <xs:enumeration value="DC"/>
+                <xs:enumeration value="FM"/>
+                <xs:enumeration value="FL"/>
+                <xs:enumeration value="GA"/>
+                <xs:enumeration value="GU"/>
+                <xs:enumeration value="HI"/>
+                <xs:enumeration value="ID"/>
+                <xs:enumeration value="IL"/>
+                <xs:enumeration value="IN"/>
+                <xs:enumeration value="IA"/>
+                <xs:enumeration value="KS"/>
+                <xs:enumeration value="KY"/>
+                <xs:enumeration value="LA"/>
+                <xs:enumeration value="ME"/>
+                <xs:enumeration value="MH"/>
+                <xs:enumeration value="MD"/>
+                <xs:enumeration value="MA"/>
+                <xs:enumeration value="MI"/>
+                <xs:enumeration value="MN"/>
+                <xs:enumeration value="MS"/>
+                <xs:enumeration value="MO"/>
+                <xs:enumeration value="MT"/>
+                <xs:enumeration value="NE"/>
+                <xs:enumeration value="NV"/>
+                <xs:enumeration value="NH"/>
+                <xs:enumeration value="NJ"/>
+                <xs:enumeration value="NM"/>
+                <xs:enumeration value="NY"/>
+                <xs:enumeration value="NC"/>
+                <xs:enumeration value="ND"/>
+                <xs:enumeration value="MP"/>
+                <xs:enumeration value="OH"/>
+                <xs:enumeration value="OK"/>
+                <xs:enumeration value="OR"/>
+                <xs:enumeration value="PW"/>
+                <xs:enumeration value="PA"/>
+                <xs:enumeration value="PR"/>
+                <xs:enumeration value="RI"/>
+                <xs:enumeration value="SC"/>
+                <xs:enumeration value="SD"/>
+                <xs:enumeration value="TN"/>
+                <xs:enumeration value="TX"/>
+                <xs:enumeration value="UT"/>
+                <xs:enumeration value="VT"/>
+                <xs:enumeration value="VI"/>
+                <xs:enumeration value="VA"/>
+                <xs:enumeration value="WA"/>
+                <xs:enumeration value="WV"/>
+                <xs:enumeration value="WI"/>
+                <xs:enumeration value="WY"/>
+                <xs:enumeration value="AE"/>
+                <xs:enumeration value="NA"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="Zip">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:pattern value="[0-9]{9}"/>
+                <xs:pattern value="[0-9]{5}"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="Country">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="20"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:simpleType name="PhoneType">
+        <xs:restriction base="xs:integer">
+            <xs:pattern value="[0-9]{10}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:element name="BSAInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="DocumentType"/>
+                <xs:element minOccurs="0" ref="DocumentTypeDescription"/>
+                <xs:element ref="DocumentNumber"/>
+                <xs:element name="IssuedBy">
+                   <xs:simpleType>
+                   	<xs:restriction base="xs:string">
+                      	<xs:maxLength value="100"/>
+                   	</xs:restriction>  
+                   </xs:simpleType>	 
+                </xs:element>   
+                <xs:element name="IssuedDate" type="xs:date"/>
+                <xs:element name="ExpiryDate" type="xs:date"/>
+                <xs:element minOccurs="0" ref="EnteredBy"/>
+                <xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="DocumentType" type="xs:string"/>
+    <!--
+        Values: Driver�s License / State ID,Passport,Alien Registration,Other
+    -->
+    <xs:element name="DocumentTypeDescription">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="DocumentNumber">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="50"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="AccountInformation">
+        <xs:complexType>
+            <xs:sequence>
+               <xs:element minOccurs="0" ref="AccountNumber"/>
+            	<xs:element minOccurs="0" name="CreditOrDebitCardInformation">
+               	<xs:complexType>
+                  	<xs:sequence>
+                     	<xs:element minOccurs="0" name="CardType" type="xs:string"/>
+               			<!--
+                     		 Values:	American Express,Discover,MasterCard,Visa
+                     	-->
+                     	<xs:element name="CardNumber">
+                        	<xs:simpleType>
+                           	<xs:restriction base="xs:string">
+                              	<xs:maxLength value="20"/>
+                           	</xs:restriction>   
+                        	</xs:simpleType>   
+                     	</xs:element>
+                     	<xs:element minOccurs="0" name="LineOfCredit">
+                     	   <xs:simpleType>
+        								<xs:restriction base="xs:decimal">
+            							<xs:minInclusive value="0"/>
+            							<xs:maxInclusive value="10000000"/>
+        								</xs:restriction>
+    								</xs:simpleType>
+                     	</xs:element>   
+                     	<xs:element minOccurs="0" name="AssociatedAccounts">
+                        	<xs:complexType>
+                           	<xs:sequence>
+                              	<xs:element maxOccurs="unbounded" ref="AccountNumber"/>
+                           	</xs:sequence>   
+                        	</xs:complexType>   
+                     	</xs:element>                           
+                  	</xs:sequence>   
+               	</xs:complexType>   
+            	</xs:element>   
+            	<xs:element minOccurs="0" ref="AccountType"/>
+            	<xs:element minOccurs="0" name="AccountStatus" type="xs:string"/>
+               <!--
+                   Values: Open,Closed,Inactive
+            	-->
+            	<xs:element minOccurs="0" name="OpenedOrIssueDate" type="xs:date"/>
+            	<xs:element minOccurs="0" ref="BranchNumber"/>
+            	<xs:element minOccurs="0" name="BranchRepresentative">
+            	   <xs:simpleType>
+            	      <xs:restriction base="xs:string">
+            	         <xs:maxLength value="150"/>
+            	      </xs:restriction>   
+            	   </xs:simpleType>   
+            	</xs:element>   
+            	<xs:element minOccurs="0" name="ClosedOrExpiryDate" type="xs:date"/>
+            	<xs:element minOccurs="0" name="RecommendedCloseDate" type="xs:date"/>
+            	<xs:element minOccurs="0" name="Compromised" type="xs:boolean"/>
+            	<xs:element minOccurs="0" name="ForeignAccount" type="xs:boolean"/>
+            	<xs:element minOccurs="0" name="ExternalOrNotOnUs" type="xs:boolean"/>
+            	<xs:element minOccurs="0" name="BankName" type="xs:string"/>
+            	<xs:element minOccurs="0" ref="EnteredBy"/>
+            	<xs:element minOccurs="0" name="EnteredOn" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="AccountType" type="xs:string"/>
+	 <!--
+			Values: Certificate of Deposit,Checking Account,Credit Card,Debit Card,Loan,Money Market,Safedep bx,Savings Account
+    -->
+    <xs:element name="AccountNumber">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="BranchNumber">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="255"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="EnteredBy" type="xs:integer"/>
+</xs:schema>
