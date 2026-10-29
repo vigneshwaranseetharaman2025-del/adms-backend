@@ -1,9 +1,9 @@
-const bcrypt = require('bcryptjs');
 const pool = require('./db');
 const initAutomationSchema = require('./automationSchema');
 const initEmailAssetSchema = require('./emailAssetSchema');
 const initContactSchema = require('./contactSchema');
 const initCampaignSchema = require('./campaignSchema');
+const initRbacSchema = require('./rbacSchema');
 
 const createTables = async () => {
   try {
@@ -321,25 +321,13 @@ const createTables = async () => {
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_call_participants_call_id ON call_participants(call_id);`);
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_call_participants_user_id ON call_participants(user_id);`);
 
-    const defaultUsername = process.env.DEFAULT_ADMIN_USERNAME || 'admin';
-    const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'admin123';
-    const defaultEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@example.com';
-
-    const userResult = await pool.query('SELECT id FROM users WHERE username = $1', [defaultUsername]);
-    if (userResult.rows.length === 0) {
-      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-      await pool.query(
-        'INSERT INTO users (username, password, full_name, email) VALUES ($1, $2, $3, $4)',
-        [defaultUsername, hashedPassword, 'Admin User', defaultEmail]
-      );
-      console.log(`Created default admin: ${defaultUsername}`);
-    }
-    await pool.query('UPDATE users SET is_admin = TRUE WHERE username = $1', [defaultUsername]);
-
     await initAutomationSchema();
     await initEmailAssetSchema();
     await initContactSchema();
     await initCampaignSchema();
+    // Access levels, manager links, delete behaviour of user foreign keys, and the
+    // default administrator (created only when no Superadmin exists).
+    await initRbacSchema();
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS newsletter_sender_domains (

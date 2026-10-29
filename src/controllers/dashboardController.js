@@ -1,4 +1,5 @@
 const dashboardModel = require('../models/dashboardModel');
+const { can } = require('../config/accessPolicy');
 
 const validType = (value) => ['document', 'gallery'].includes(value);
 const parseItem = (req, res) => {
@@ -24,7 +25,9 @@ const getQuickActions = async (req, res, next) => {
 
 const getDashboardSummary = async (req, res, next) => {
   try {
-    res.json(await dashboardModel.getDashboardSummary(req.user.id));
+    // Regular users only see templates and policies they are allowed to open.
+    const accessUserId = can(req.user.access_level, 'documents.manage') ? null : req.user.id;
+    res.json(await dashboardModel.getDashboardSummary(req.user.id, accessUserId));
   } catch (error) { next(error); }
 };
 

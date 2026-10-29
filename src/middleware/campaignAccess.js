@@ -1,24 +1,19 @@
-const pool = require('../config/db');
+
+const { can } = require('../config/accessPolicy');
 
 /**
- * Who may use the Campaigns module.
- *   - Administrators: everything (including sender domain settings).
- *   - Roles with "Campaigns: edit & send": create, edit, delete and send shared drafts, manage contacts and templates.
- *   - Roles with "Campaigns: view": see drafts, templates, contacts and reports, but not change or send anything.
- * Set per role under Administration. Must run after authenticateToken.
+ * Who may use the Campaigns module: Admins and Superadmins (config/accessPolicy.js,
+ * capability "campaigns.access"). Everyone else gets 403, so the module cannot be reached
+ * through direct URLs or API calls either. Must run after authenticateToken, which loads
+ * the current access level from the database on every request.
+ *
+ * (role_permissions.campaigns_view / campaigns_edit are kept in the database but no longer
+ * grant access to regular users.)
  */
 const loadCampaignAccess = async (req) => {
   if (req.campaignAccess) return req.campaignAccess;
-  const { rows: [row] } = await pool.query(
-    `SELECT u.is_admin, COALESCE(rp.campaigns_view, FALSE) AS view, COALESCE(rp.campaigns_edit, FALSE) AS edit
-     FROM users u
-     LEFT JOIN role_permissions rp ON rp.role = COALESCE(NULLIF(TRIM(u.role), ''), 'user')
-     WHERE u.id = $1`,
-    [req.user?.id]
-  );
-  const admin = Boolean(row?.is_admin);
-  const edit = admin || Boolean(row?.edit);
-  req.campaignAccess = { admin, edit, view: edit || Boolean(row?.view) };
+  const allowed = can(req.user?.access_level, 'campaigns.access');
+  req.campaignAccess = { admin: allowed, edit: allowed, view: allowed };
   return req.campaignAccess;
 };
 
@@ -30,8 +25,8 @@ const guard = (level, message) => async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-const requireCampaignView = guard('view', 'You do not have access to Campaigns. Ask an administrator to enable "Campaigns: view" for your role.');
-const requireCampaignEdit = guard('edit', 'Your role can view campaigns but not change or send them. Ask an administrator for "Campaigns: edit & send".');
+const requireCampaignView = guard('view', 'The Email Campaigns module is available to Admins and Superadmins only.');
+const requireCampaignEdit = guard('edit', 'The Email Campaigns module is available to Admins and Superadmins only.');
 const requireCampaignAdmin = guard('admin', 'Administrator access is required.');
 
 /** GET routes need view access; everything else needs edit access. */

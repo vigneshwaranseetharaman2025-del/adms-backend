@@ -163,6 +163,17 @@ const findParticipantIds = async (conversationId) => {
   return result.rows.map((row) => row.user_id);
 };
 
+// True for a one-to-one conversation whose other person's account was deleted.
+const isDirectWithDeletedUser = async (conversationId) => {
+  const result = await pool.query(
+    `SELECT c.type, (SELECT COUNT(*)::int FROM conversation_participants cp WHERE cp.conversation_id = c.id) AS members
+       FROM conversations c WHERE c.id = $1`,
+    [conversationId]
+  );
+  const row = result.rows[0];
+  return Boolean(row && row.type === 'direct' && row.members < 2);
+};
+
 const isParticipant = async (conversationId, userId) => {
   const result = await pool.query(
     'SELECT 1 FROM conversation_participants WHERE conversation_id = $1 AND user_id = $2',
@@ -422,6 +433,7 @@ const getUserLastSeen = async (userId) => {
 };
 
 module.exports = {
+  isDirectWithDeletedUser,
   getOrCreateDirectConversation,
   findConversationsForUser,
   findConversationById,

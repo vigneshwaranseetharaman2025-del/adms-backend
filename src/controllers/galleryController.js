@@ -1,4 +1,6 @@
 const crypto = require('crypto');
+const { can } = require('../config/accessPolicy');
+const { findRolePermissions } = require('../models/userModel');
 const sharp = require('sharp');
 const storage = require('../storage');
 const {
@@ -313,6 +315,13 @@ const downloadGalleryItem = async (req, res, next) => {
     const item = await findGalleryItemById(req.params.id);
     if (!item || !item.storage_key) {
       return res.status(404).json({ message: 'Gallery item not found.' });
+    }
+    // Regular users download only when their role allows it (Administration → role permissions).
+    if (!can(req.user?.access_level, 'gallery.manage')) {
+      const rolePermissions = await findRolePermissions(String(req.user?.role || '').trim() || 'user');
+      if (rolePermissions.download === false) {
+        return res.status(403).json({ message: 'Downloads are turned off for your role.', code: 'FORBIDDEN' });
+      }
     }
     await recordDownload(req.user.id, 'gallery', item.id);
 

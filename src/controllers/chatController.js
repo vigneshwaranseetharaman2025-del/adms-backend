@@ -64,7 +64,9 @@ const getConversations = async (req, res, next) => {
             profilePhotoUrl: row.other_profile_photo_url,
             lastSeen: row.other_last_seen,
           }
-        : null,
+        : row.type === 'direct'
+          ? { id: null, username: null, fullName: 'Deleted user', profilePhotoUrl: null, lastSeen: null, deleted: true }
+          : null,
       lastMessage: row.last_message_id
         ? {
             id: row.last_message_id,

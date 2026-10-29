@@ -22,7 +22,18 @@ const { recordDownload } = require('../models/dashboardModel');
 // Shared SMTP transport: picks the right TLS mode for SMTP_PORT (see config/mailer.js).
 const { mailer } = require('../config/mailer');
 
+const { can } = require('../config/accessPolicy');
+
 const isAdmin = (req) => req.user?.is_admin === true;
+// Admins and Superadmins see every document; others only what their permissions allow.
+const accessUserIdFor = (req) => (can(req.user?.access_level, 'documents.manage') ? null : req.user?.id);
+// The raw storage key lets a file be opened from /files/ and shared in chat, so it is only
+// returned to people who may download the document.
+const forViewer = (document) => {
+  if (!document) return document;
+  const { can_view: _canView, ...rest } = document;
+  return rest.can_download === false ? { ...rest, storage_key: null } : rest;
+};
 const requireAdmin = (req, res) => {
   if (!isAdmin(req)) {
     res.status(403).json({ message: 'Administrator access is required.' });
@@ -111,9 +122,10 @@ const getAllDocuments = async (req, res, next) => {
       sortBy,
       order,
       userId: req.user?.id,
+      accessUserId: accessUserIdFor(req),
     });
 
-    res.json({ documents: documents.map(withUploaderName), totalCount, page: resolvedPage, pageSize: resolvedPageSize });
+    res.json({ documents: documents.map((document) => forViewer(withUploaderName(document))), totalCount, page: resolvedPage, pageSize: resolvedPageSize });
   } catch (error) {
     next(error);
   }
@@ -121,11 +133,11 @@ const getAllDocuments = async (req, res, next) => {
 
 const getDocumentById = async (req, res, next) => {
   try {
-    const document = await findDocumentById(req.params.id, req.user?.id);
-    if (!document) {
+    const document = await findDocumentById(req.params.id, req.user?.id, accessUserIdFor(req));
+    if (!document || document.can_view === false) {
       return res.status(404).json({ message: 'Document not found.' });
     }
-    res.json(withUploaderName(document));
+    res.json(forViewer(withUploaderName(document)));
   } catch (error) {
     next(error);
   }
@@ -263,8 +275,8 @@ const uploadMultipleDocuments = async (req, res, next) => {
 
 const getDocumentThumbnail = async (req, res, next) => {
   try {
-    const document = await findDocumentById(req.params.id);
-    if (!document || !document.thumbnail_key) {
+    const document = await findDocumentById(req.params.id, null, accessUserIdFor(req));
+    if (!document || !document.thumbnail_key || document.can_view === false) {
       return res.status(404).json({ message: 'Thumbnail not found.' });
     }
 
@@ -285,16 +297,22 @@ const getDocumentThumbnail = async (req, res, next) => {
 
 const downloadDocument = async (req, res, next) => {
   try {
-    const document = await findDocumentById(req.params.id);
-    if (!document || !document.storage_key) {
+    const document = await findDocumentById(req.params.id, null, accessUserIdFor(req));
+    if (!document || !document.storage_key || document.can_view === false) {
       return res.status(404).json({ message: 'Document not found.' });
     }
-    await recordDownload(req.user.id, 'document', document.id);
+    // ?preview=1 opens the file for viewing: needs view permission only and is not counted
+    // as a download. A real download needs download permission.
+    const isPreview = req.query.preview === '1' || req.query.preview === 'true';
+    if (!isPreview && document.can_download === false) {
+      return res.status(403).json({ message: 'You do not have permission to download this document.', code: 'FORBIDDEN' });
+    }
+    if (!isPreview) await recordDownload(req.user.id, 'document', document.id);
 
     if ((process.env.STORAGE_PROVIDER || 'local').toLowerCase() === 'local') {
       const stream = storage.getStream(document.storage_key);
       res.setHeader('Content-Type', document.mime_type || 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="${document.original_filename}"`);
+      res.setHeader('Content-Disposition', `${isPreview ? 'inline' : 'attachment'}; filename="${document.original_filename}"`);
       stream.pipe(res);
       return;
     }
@@ -444,8 +462,8 @@ const deleteDocuments = async (req, res, next) => {
 
 const acknowledgeDocument = async (req, res, next) => {
   try {
-    const document = await findDocumentById(req.params.id, req.user?.id);
-    if (!document) return res.status(404).json({ message: 'Document not found.' });
+    const document = await findDocumentById(req.params.id, req.user?.id, accessUserIdFor(req));
+    if (!document || document.can_view === false) return res.status(404).json({ message: 'Document not found.' });
     if (!document.acknowledgement_required) return res.status(400).json({ message: 'This document does not require acknowledgement.' });
     const { signatureData } = req.body || {};
     if (typeof signatureData !== 'string' || !signatureData.startsWith('data:image/png;base64,') || signatureData.length > 2_000_000) {

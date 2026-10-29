@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { canViewExpr } = require('./documentModel');
 
 const itemQuery = `
   SELECT f.item_type, f.item_id, f.created_at,
@@ -24,14 +25,36 @@ const getEvents = async () => (await pool.query(
    FROM events ORDER BY event_date ASC, start_time ASC, id ASC`
 )).rows;
 
-const getDashboardDocuments = async (keyword, limit) => (await pool.query(
+// accessUserId: null for Admins / Superadmins; otherwise only documents that user may view.
+const getDashboardDocuments = async (keyword, limit, accessUserId = null) => (await pool.query(
   `SELECT d.*, u.full_name AS uploaded_by_name, u.username AS uploaded_by_username
    FROM documents d
    LEFT JOIN folders f ON f.folder_key = d.folder_id
    LEFT JOIN users u ON u.id = d.uploaded_by
    WHERE LOWER(CONCAT_WS(' ', f.name, f.folder_key, d.folder_id)) LIKE $1
+     AND ${canViewExpr(accessUserId ? '$3::int' : null)}
    ORDER BY d.uploaded_at DESC NULLS LAST, d.id DESC
-   LIMIT $2`, [`%${keyword}%`, limit]
+   LIMIT $2`, accessUserId ? [`%${keyword}%`, limit, accessUserId] : [`%${keyword}%`, limit]
+)).rows;
+
+// Templates for the dashboard widget: documents whose folder OR file name says "template" and whose
+// name contains a year (e.g. "Aithent-Word-Template-2026.docx"). Newest year first: current year's
+// templates, then 2025, 2024, ... until `limit` cards are filled. Future years are ignored.
+const getCurrentYearTemplates = async (limit = 4, accessUserId = null) => (await pool.query(
+  `WITH tpl AS (
+     SELECT d.*, u.full_name AS uploaded_by_name, u.username AS uploaded_by_username,
+       (SUBSTRING(CONCAT_WS(' ', d.original_filename, d.title) FROM '(?:^|[^0-9])((?:19|20)[0-9]{2})(?:[^0-9]|$)'))::int AS template_year
+     FROM documents d
+     LEFT JOIN folders f ON f.folder_key = d.folder_id
+     LEFT JOIN users u ON u.id = d.uploaded_by
+     WHERE (LOWER(CONCAT_WS(' ', f.name, f.folder_key, d.folder_id)) LIKE '%template%'
+        OR LOWER(CONCAT_WS(' ', d.title, d.original_filename)) LIKE '%template%')
+       AND ${canViewExpr(accessUserId ? '$2::int' : null)}
+   )
+   SELECT * FROM tpl
+   WHERE template_year IS NOT NULL AND template_year <= EXTRACT(YEAR FROM NOW())::int
+   ORDER BY template_year DESC, title ASC, id ASC
+   LIMIT $1`, accessUserId ? [limit, accessUserId] : [limit]
 )).rows;
 
 const getRecentGalleries = async () => (await pool.query(
@@ -52,13 +75,13 @@ const getRecentGalleries = async () => (await pool.query(
    LIMIT 8`
 )).rows;
 
-const getDashboardSummary = async (userId) => {
+const getDashboardSummary = async (userId, accessUserId = null) => {
   const [[favorites, downloads, shared], recentActivity, events, templates, policies, galleries] = await Promise.all([
     Promise.all([getFavorites(userId), getDownloads(userId), getShared(userId)]),
     getRecentActivity(),
     getEvents(),
-    getDashboardDocuments('template', 4),
-    getDashboardDocuments('polic', 2),
+    getCurrentYearTemplates(4, accessUserId),
+    getDashboardDocuments('polic', 2, accessUserId),
     getRecentGalleries(),
   ]);
   return {

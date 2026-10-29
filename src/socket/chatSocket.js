@@ -125,6 +125,10 @@ const registerChatSocket = (io) => {
           if (typeof ack === 'function') ack({ error: 'Not a participant of this conversation.' });
           return;
         }
+        if (await chatModel.isDirectWithDeletedUser(conversationId)) {
+          if (typeof ack === 'function') ack({ error: 'This person\'s account was deleted. Messages can no longer be sent here.' });
+          return;
+        }
 
         const message = await chatModel.createMessage({
           conversation_id: conversationId,

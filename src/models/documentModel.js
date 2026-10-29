@@ -2,7 +2,22 @@ const pool = require('../config/db');
 
 const ALLOWED_SORT_FIELDS = new Set(['title', 'uploaded_at', 'size_bytes', 'mime_type']);
 
-const findDocuments = async ({ page = 1, pageSize, limit = 50, offset, folderId, search, sortBy = 'uploaded_at', order = 'desc', userId = null }) => {
+/**
+ * Whether a regular user may view / download document d. A per-document permission
+ * (document_permissions) wins; otherwise the user's role permission (role_permissions);
+ * otherwise allowed. `param` is the SQL placeholder holding the user id, or null for
+ * Admins and Superadmins, who may open everything.
+ */
+const accessExpr = (column, param) => (param
+  ? `COALESCE(
+       (SELECT dp.${column} FROM document_permissions dp WHERE dp.document_id = d.id AND dp.user_id = ${param}),
+       (SELECT rp.${column} FROM users au JOIN role_permissions rp ON rp.role = COALESCE(NULLIF(TRIM(au.role), ''), 'user') WHERE au.id = ${param}),
+       TRUE)`
+  : 'TRUE');
+const canViewExpr = (param) => accessExpr('view', param);
+const canDownloadExpr = (param) => (param ? `(${accessExpr('view', param)} AND ${accessExpr('download', param)})` : 'TRUE');
+
+const findDocuments = async ({ page = 1, pageSize, limit = 50, offset, folderId, search, sortBy = 'uploaded_at', order = 'desc', userId = null, accessUserId = null }) => {
   const queryParts = [];
   const values = [];
   const resolvedPage = Math.max(1, parseInt(page, 10) || 1);
@@ -22,6 +37,13 @@ const findDocuments = async ({ page = 1, pageSize, limit = 50, offset, folderId,
     queryParts.push(`(title ILIKE $${values.length} OR description ILIKE $${values.length} OR original_filename ILIKE $${values.length})`);
   }
 
+  let accessParam = null;
+  if (accessUserId) {
+    values.push(accessUserId);
+    accessParam = `$${values.length}::int`;
+    queryParts.push(canViewExpr(accessParam));
+  }
+
   const whereClause = queryParts.length ? `WHERE ${queryParts.join(' AND ')}` : '';
   const safeSortBy = ALLOWED_SORT_FIELDS.has(sortBy) ? sortBy : 'uploaded_at';
   const safeOrder = order.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
@@ -34,7 +56,8 @@ const findDocuments = async ({ page = 1, pageSize, limit = 50, offset, folderId,
     SELECT d.*, u.full_name AS uploaded_by_name, u.username AS uploaded_by_username,
       (SELECT COUNT(*) FROM document_acknowledgements da WHERE da.document_id = d.id) AS acknowledgement_count,
       (SELECT signed_at FROM document_acknowledgements da WHERE da.document_id = d.id AND da.user_id = $${values.length - 2}) AS acknowledged_at,
-      (SELECT signature_data FROM document_acknowledgements da WHERE da.document_id = d.id AND da.user_id = $${values.length - 2}) AS signature_data
+      (SELECT signature_data FROM document_acknowledgements da WHERE da.document_id = d.id AND da.user_id = $${values.length - 2}) AS signature_data,
+      ${canDownloadExpr(accessParam)} AS can_download
     FROM documents d
     LEFT JOIN users u ON u.id = d.uploaded_by
     ${whereClause}
@@ -44,7 +67,7 @@ const findDocuments = async ({ page = 1, pageSize, limit = 50, offset, folderId,
   `;
 
   const countValues = values.slice(0, -3);
-  const countQuery = `SELECT COUNT(*) AS total_count FROM documents ${whereClause}`;
+  const countQuery = `SELECT COUNT(*) AS total_count FROM documents d ${whereClause}`;
 
   const [documentsResult, countResult] = await Promise.all([
     pool.query(query, values),
@@ -57,15 +80,18 @@ const findDocuments = async ({ page = 1, pageSize, limit = 50, offset, folderId,
   };
 };
 
-const findDocumentById = async (id, userId = null) => {
+const findDocumentById = async (id, userId = null, accessUserId = null) => {
+  const accessParam = accessUserId ? '$3::int' : null;
   const result = await pool.query(
     `SELECT d.*, u.full_name AS uploaded_by_name, u.username AS uploaded_by_username,
       (SELECT signed_at FROM document_acknowledgements da WHERE da.document_id = d.id AND da.user_id = $2) AS acknowledged_at,
-      (SELECT signature_data FROM document_acknowledgements da WHERE da.document_id = d.id AND da.user_id = $2) AS signature_data
+      (SELECT signature_data FROM document_acknowledgements da WHERE da.document_id = d.id AND da.user_id = $2) AS signature_data,
+      ${canViewExpr(accessParam)} AS can_view,
+      ${canDownloadExpr(accessParam)} AS can_download
      FROM documents d
      LEFT JOIN users u ON u.id = d.uploaded_by
     WHERE d.id = $1`,
-      [id, userId]
+      accessUserId ? [id, userId, accessUserId] : [id, userId]
   );
   return result.rows[0] || null;
 };
@@ -274,6 +300,8 @@ const deleteFolder = async (folderKey) => {
 };
 
 module.exports = {
+  canViewExpr,
+  canDownloadExpr,
   findDocuments,
   findDocumentById,
   updateDocument,

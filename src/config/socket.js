@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const pool = require('./db');
 const { Server } = require('socket.io');
 
 // Creates and configures the Socket.IO server on top of the existing HTTP
@@ -36,9 +37,16 @@ const createSocketServer = (httpServer) => {
       return next(new Error('Authentication token is required.'));
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
         return next(new Error('Invalid or expired token.'));
+      }
+      try {
+        // A deleted account's token must not reconnect (REST does the same check).
+        const { rows } = await pool.query('SELECT id FROM users WHERE id = $1', [decoded.id]);
+        if (!rows[0]) return next(new Error('This account no longer exists.'));
+      } catch (dbError) {
+        return next(new Error('Unable to verify the account.'));
       }
       socket.user = decoded; // { id, username }
       next();
